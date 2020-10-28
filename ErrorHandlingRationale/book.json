@@ -1,0 +1,12 @@
+{
+    "title": "Error Handling Rationale and Proposal",
+    "This paper surveys the error-handling world, analyzes various ideas which have been proposed or are in practice in other languages, and ultimately proposes an error-handling scheme for Swift together with import rules for our APIs.",
+    "language": "zh",
+    "license": "cc by nc sa 4.0",
+    "author": "haitao",
+    "x_proofread": "",
+    "x_origin_author": "mikeash",
+    "x_origin_url": "https://github.com/apple/swift/blob/main/docs/ErrorHandlingRationale.rst#typed-propagation",
+    "x_origin_ctime": "23 Apr 2015",
+    "structure.glossary": "GLOSSARY.md"
+  }
