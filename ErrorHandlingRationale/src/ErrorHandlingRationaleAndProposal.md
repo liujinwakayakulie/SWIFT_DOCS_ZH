@@ -497,7 +497,7 @@ defer foo(x, y)
 
 ## Automatic propagation
 
-Swift应该使用automatic propagation错误，而不是依赖于程序员手动检查并返回错误。就常见的错误处理任务而言，automatic propagation所需的代码样板会少很多。这会引入显式control flow的问题，但是我们可以使用marked propagation解决该问题；如下所述。
+Swift应该使用automatic propagation错误，而不是依赖于程序员手动检查并返回错误。就常见的错误处理任务而言，automatic propagation所需的代码样板会少很多。这会引入隐式control flow的问题，但是我们可以使用marked propagation解决该问题；如下所述。
 
 我们没有理由抛弃使用传统的`throw` / `catch`。当然也有其他选择，比如`raise`/`handle`。理论上来说，这种转变会让Swift与以往的异常处理产生差异。从其他语言转过来的人对异常处理有很多预期，这些预期可能并不适用于Swift。然而只要我们的错误模型与标准的异常模型足够相似，人们就会不自觉的将它们联系起来；因此不需要去解释我们将要做的事情。所以，使用不同的关键字似乎也没什么大不了的。
 
@@ -533,7 +533,7 @@ Swift还应该提供一些用于manual propagation的工具。我们的库应该
 
 ## Typed propagation
 
-Swift应该采用静态强制类型传播(enforced typed propagation)。默认情况下，函数不应抛出异常）。编译器应该拒绝在禁止抛出异常的上下文中调用可以抛出异常的函数。
+Swift应该采用静态强制类型传播(enforced typed propagation)。默认情况下，函数不应抛出异常。编译器应该拒绝在禁止抛出异常的上下文中调用可以抛出异常的函数。
 
 函数类型应表明函数是否抛出异常。即使是头等（first-class）函数值也需要跟踪。不能抛出异常的函数是抛出异常函数的子类。
 
@@ -642,7 +642,7 @@ enum HomeworkError : Error {
 
 请注意，这与包含error domain、error code和optional user data的`NSError模型`完全对应。我们希望将系统错误域导入为遵循这种方法并实现`Error`协议的枚举。NSError和CFError本身也会遵从`Error`协议。
 
-客观表现层(仍然被固定)可以有效地将`NSError`作为`Error`导入，反之亦然。通过使用合法的类型名称作为domain key，使用枚举器作为error code，并将payload转换为user data，应该有可能将遵守`Error`协议的任意Swift`enum`转换为`NSError`。
+物理表现层(仍然被固定)可以有效地将`NSError`作为`Error`导入，反之亦然。通过使用合法的类型名称作为domain key，使用枚举器作为error code，并将payload转换为user data，应该有可能将遵守`Error`协议的任意Swift`enum`转换为`NSError`。
 
 在需要错误时分配内存是可以接受的，但是我们的表现层(representation)不应阻止优化器将`throw`直接转发给`catch`并删除中间错误对象。
 
@@ -679,7 +679,7 @@ let x = (try stream.readInt()) + stream.readInt()
 let array = [ try foo(), bar(), baz() ]
 ```
 
-一些程序员可能希望这么做来让特定的抛出异常调用非常清晰。另一个开发者可能更倾向于知道语句中的哪些内容会抛出异常。
+其他开发者可能希望这么做来让特定的抛出异常调用非常清晰。另一个开发者可能更倾向于知道语句中的哪些内容会抛出异常。
 
 我们曾经还考虑了将标记放入调用参数的可能性，例如：
 
@@ -687,9 +687,11 @@ let array = [ try foo(), bar(), baz() ]
 parser.readKeys(&strings, try)
 ```
 
-只要抛出异常的调用在语法上遵守方法调用的规则就可以运行，；这包括对自由函数，方法和初始化程序的调用。但是，它实际上要求Swift禁止操作符、属性、下标访问器抛出异常，这可能不是一个合理的限制，尤其是对于操作符。这也有点不自然，它迫使用户标记每一个call site，而不能一次标记语句中的全部内容。
+只要抛出异常的调用在语法上遵守方法调用的规则就可以运行；这包括对自由函数，方法和初始化程序的调用。但是，它实际上要求Swift禁止操作符、属性、下标访问器抛出异常，这可能不是一个合理的限制，尤其是对于操作符。这也有点不自然，它迫使用户标记每一个call site，而不能一次标记语句中的全部内容。
 
 标记自动闭包会遇到问题。在大多数情况下，我们想假装自动闭包的表达式是在闭包的上下文中计算的;我们不想同时标记自动闭包内的调用和使用自动闭包的函数的调用！我们应该通过类型检查来检查这种模式:调用一个有`throwsIf`修饰自动闭包参数的函数。
+
+被认为像陈述句的函数也存在类似的问题。 我们希望你能够这样写：
 
 ```
 
