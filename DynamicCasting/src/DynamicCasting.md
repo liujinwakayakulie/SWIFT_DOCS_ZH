@@ -10,7 +10,7 @@
 Swfit提供了三个转型操作符：`is` , `as?` 和 `as!`。每个操作符左侧放置实例，右侧放置类型表达式。
 
 * 转型检查操作符`is`，用来检查特定实例是否可以转换为特定目的类型。它会返回布尔值结果。
-* 有条件的转型操作符`as?`可以尝试转换并返回一个`Optional`结果：如果转换失败，返回`nil`，否则结果包含非空可选值。
+* 有条件的转型操作符`as?`尝试转换并返回一个`Optional`结果：如果转换失败，返回`nil`，否则结果包含非空可选值。
 * 强制转型操作符`as!`无条件的执行转型操作并返回结果。如果`as!`表达式失败了，这次操作可能会导致系统异常中止。
 
 注意：静态强制操作符`as`扮演不同的角色，在本文中，它的行为不会单独讨论。
@@ -21,14 +21,17 @@ Swfit提供了三个转型操作符：`is` , `as?` 和 `as!`。每个操作符�
 * 有条件的转型：`(x as? T) == (x is T) ? .some(x as! T) : nil`
 * 强制转型：`x as! T`与`(x as? T)!`相同
 
+特别要注意的是，`is`和`as!`可以以`a?`的形式实现，反之亦然。
+
 与其他名字中带有`!`的操作符一样，`as!`仅在程序员预先知道可以转换成功的情况中适用。如果转换失败了，之后的行为可能就完全无法确定了。请参阅下面对数组强制转换的讨论，了解这种非确定性（non-determinism）可能很重要的特定情况（tag）。
 
-后续部分详细介绍了控制特定Swift类型转换操作规则。除非另有说明，否则以下各部分描述的类型之间的相互转换是不可能成功的。比如struct实例转换成函数类型，反之亦然。
+后续部分详细介绍了管理特定Swift类型转换操作规则。除非另有说明，否则以下各部分描述的类型之间的相互转换是不可能成功的。比如struct实例转换成函数类型，反之亦然。
+
+在可能的情况下，每个部分都包含机器可验证的invariants，这些invariants可以用作为此功能开发健壮测试组建的基础。
 
 ## Identity Cast
 
-将类型的实例转型为自己的类型总是成功的，并且将原始值保持不变。
-
+将类型的实例转型为自己的类型总是成功的，并且返回没有改变的原始值。
 ```
 let a: Int = 7
 a is Int // true
@@ -46,10 +49,10 @@ a as! Int == a // true
 类类型之间进行转型遵循标准的面向对象的编程规则：
 
 * 类向上转型：如果`C`是`SuperC`的子类并且`c`是`C`的实例，那么`c is SuperC == true`并且`(c as? SuperC) != nil`。（注意：这里的“向上转型”不会改变内存中的表现（representation））。然而，当通过变量或`SuperC`类型的表达式访问`c`时，仅在`SuperC`上定义过的方法和实例变量是可用的。
-* 类向下转型：如果`C`是`SuperC`的子类并且`sc`是`SuperC`的实例。仅当`sc`确实是`C`的实例时，`sc is C`返回true。
+* 类向下转型：如果`C`是`SuperC`的子类并且`sc`是`SuperC`的实例。仅当`sc`确实是`C`的实例时，`sc is C`返回true。（注意：同样，向下转换不会影响内存中的表现。）
 * Objective-C 类转型：当使用`@objc`属性定义的类或继承自Objective-C类时，上述规则也适用。
 * Class向AnyObject转型：任何类引用都可以转型为`AnyObject`，然后再转型回原始类型。详情见后面“AnyObject”。
-* 如果结构体和枚举类遵守`_ObjectiveCBridgeable `协议，然后，可以将关联的桥接类型的类强制转换为struct或enum类型，反之亦然。详情见后面“The `_ObjectiveCBridgeable` Protocol”。
+* 如果结构体和枚举类型遵守`_ObjectiveCBridgeable `协议，然后，可以将关联的桥接类型的类强制转换为struct或enum类型，反之亦然。详情见后面“The `_ObjectiveCBridgeable` Protocol”。
 
 Invariants:
 
@@ -65,15 +68,15 @@ Invariants:
 
 上述的意图是将CoreFoundation类的实例同时视为相对应的Objective-C类的实例，以此来保证这些类的二重性。特别指出，如果在Objective-C类型上声明了protocol conformance，则可以将CoreFoundation类型的实例直接转换为协议类型。
  
-XXX TODO:是不是?如果ObjC实例等价于CF并且CF类型被扩展，…？
+XXX TODO:如果相反呢?如果ObjC实例等价于CF并且CF类型被扩展，…？
 
 ### Objective-C types
 
 针对以下三种情况进行接下来的讨论：
 
 * 使用`is`，`as?`和`as!`操作符进行显式转换。
-* Swift向Objective-C隐式转换：当Swift代码通过非Objective-C类型的参数调用Objective-C的函数或方法时，或者Swift函数将值返回给Objective-C调用者时，这些转换时自动进行的。
-* Objective-C向Swift隐式转换：当参数从Objective-C调用者传递给Swift函数时，或者当Objective-C将值返回给Swifter调用者时，这些转换时自动进行的。除非另有说明，否则以下所有情况均同样适用于上述所有三个情况。
+* Swift向Objective-C隐式转换：当Swift代码通过非Objective-C类型的参数调用Objective-C的函数或方法时，或者Swift函数将值返回给Objective-C调用者时，这些转换是自动进行的。
+* Objective-C向Swift隐式转换：当参数从Objective-C调用者传递给Swift函数时，或者当Objective-C将值返回给Swifter调用者时，这些转换是自动进行的。除非另有说明，否则以下所有情况均同样适用于上述所有三个情况。
 
 Swift和Objective-C之间的显式转型通常符合之前描述的类类型的通用规则。同样的，类实例向Objective-C协议类型的强制转型符合协议类型转型的通用规则。
 
@@ -90,7 +93,7 @@ Objective-C类和协议：
 
 `_ObjectiveCBridgeable`协议允许某些类型选择自定义转型行为。请注意，尽管该机制是为简化Swift与Objective-C的交互而专门设计的，但它不一定与Objective-C绑定。
 
-`_ObjectiveCBridgeable`协议定义了一个关联的引用类型`_ObjectiveCType`，并提供了与关联的`_ObjectiveCType`进行相互转型的一系列方法。
+`_ObjectiveCBridgeable`协议定义了一个关联的引用类型`_ObjectiveCType`，并提供了与关联的`_ObjectiveCType`进行相互转型的一系列方法。这个协议允许库代码提供专有的机制来将Swift类型转型为引用类型。
 
 注意:关联的`_ObjectiveCType `被约束为`AnyObject`的子类型。它并不局限于现在的Objective-c类型。特别是，该机制同样适用于非Apple平台上的Foundation的Swift实现和Apple平台上的Objective-C Foundation。
 
@@ -120,7 +123,7 @@ let c = b as? Double
 
 ### Structs and Enums
 
-不可以在具体的结构体或枚举类型之间进行转型。更正式的来说：
+不可以在具体的结构体或枚举类型之间进行转型。具体来说：
 
 * 如果`S`和`T`是结构体或枚举类型并且`s is S == true`，仅当`S.self == T.self`时，`s is T`。
 
@@ -202,7 +205,7 @@ t4 as? U?? // Produces .some(.none)
 
 例如：存在一个`Array<Int>`类型的`arr`，你可以转型`arr as? Array<Any>`。将会得到一个新数组。其中原始数组中的每个`Int`都被单独转型为`Any`。
 
-然而，如果任何一个元素不能转型，那么转型会失败。例如，思考下面的例子：
+然而，如果任何一个元素不能转型，外层的转型会失败。例如，思考下面的例子：
 
 ```
 
@@ -211,7 +214,7 @@ a as? Array<Int> // Fails because "string" cannot be cast to `Int`
 
 ```
 
-具体来说，转型操作符对`Array`的操作与下面的实现类似。特别是，要注意，一个空数组可以成功转型为任意一个目标数组类型。
+具体来说，转型操作符对`Array`的操作与下面的实现类似。特别需要注意的是，一个空数组可以成功转型为任意一个目标数组类型。
 
 ```
 func arrayCast<T,U>(source: Array<T>) -> Optional<Array<U>> {
@@ -235,7 +238,7 @@ Invariants
 
 相同的逻辑也同样适用于`Set`和`Dictionary`的转型。注意，如果集合组成部分的转型操作包括将原集合中的不相等元素转换成目标中的相等元素，则结果`Set`或`Dictionay`中的元素数量可能减少。
 
-具体来说，转型操作符对`Array`的操作与下面的代码类似：
+具体来说，转型操作符对Set和Dictionary的操作与下面的代码类似：
 
 ```
 func setCast<T,U>(source: Set<T>) -> Optional<Set<U>> {
@@ -268,7 +271,7 @@ func dictionaryCast<K,V,K2,V2>(source: Dictionary<K,V>) -> Optional<Dictionary<K
 
 对于`as?`转型，之前提到的转型操作要求每个元素都可以单独转换。当尝试在Swift和Objective-C的代码之间共享大型容器时，这样的转换操作可能带来性能瓶颈。
 
-然而，对于`as!`转型，程序员有责任在请求转换之前确保操作成功。可以通过在相关元素需要的时候再把内部组件转型来满足刚才的要求，尽量（但是不强制）这么做。在（程序员）知道数据安全且内部组件转换不重要的前提下，这种懒转换（lazy conversion）可以大幅提高性能。然而，如果转换不能完成，则无法确定转型请求会立即失败还是程序在稍后的某个时刻失败。
+然而，对于`as!`转型，程序员有责任在请求转换之前确保操作成功。可以通过在相关元素需要的时候再把内部组件转型来满足刚才的要求，尽量（但是不强制）这么做。在（程序员）知道数据安全且内部组件转换重要的前提下，这种懒转换（lazy conversion）可以大幅提高性能。然而，如果转换不能完成，则无法确定转型请求会立即失败还是程序在稍后的某个时刻失败。
 
 ### Tuples
 
@@ -297,7 +300,7 @@ existential types `E`的关键不变式如下：
 
 * Strong existential invariant：如果`t`是任意实例，`U`是任意类型，并且`t is E`那么`(t as! E) as? U`与`t as? U`返回相同结果。
 
-直观上简单点说，如果你可以讲实例`t`放入`E`中，那么你可以通过转型将其取出。对于Equatable类型，这意味着当两个操作成功时，他们的结果是相等的。这也就意味着如果其中任何一个`as?`转型失败，另一个也会失败。
+直观上简单点说，如果你可以将实例`t`放入`E`中，那么你可以通过转型将其取出。对于Equatable类型，这意味着当两个操作成功时，他们的结果是相等的。这也就意味着如果其中任何一个`as?`转型失败，另一个也会失败。
 
 `AnyObject`和`AnyHashable`没有完全满足刚才提到的strong invariant。相反，它们满足了以下weakder版本：
 * Weak existential invariant：如果`t`是任意实例，`U`是任意类型，并且
@@ -324,7 +327,7 @@ Invariants
 
 任意类、枚举、结构体、元组、函数、元类型或者existential元类型实例都可以转型成`AnyObject`。
 
-转型成其他类型可以访问`AnyObject`容器的内容可：
+转型成其他类型可以访问`AnyObject`容器的内容：
 
 * Weak existential invariant:如果`t`是任意实例，`U`是任意类型，`t is AnyObject`，并且`t is U`，那么`(t as! AnyObject) as? U`将返回与`t as? U`相同的结果
 
@@ -336,7 +339,7 @@ Invariants
 
 对于非引用类型，包括结构体、枚举、元组类型，转型逻辑需要先检查`_ObjectiveCBridgeable `协议conformance，它可以将源转换为专门的引用类型。（可以在此前的“The _ObjectiveCBridgeable Protocol”了解更多细节。）
 
-如果桥接失败，值将会被拷贝到一个不透明堆，与Objective-C内存管理兼容的已分配内存的容器。这个容器的唯一作用是允许Swift类型可以与`AnyObject`相互转型，以便它们可以与需要调用Swift代码的Objective-C函数共享。Objective-C代码不能使用这个容器的内容；它只能存储引用并将其传递回Swift函数。
+如果桥接失败，值将会被拷贝到一个与Objective-C内存管理兼容的不透明堆容器。这个容器的唯一作用是允许Swift类型可以与`AnyObject`相互转型，以便它们可以与需要调用Swift代码的Objective-C函数共享。Objective-C代码不能使用这个容器的内容；它只能存储引用并将其传递回Swift函数。
 
 针对不支持Objective-C运行时的平台，内部容器类型有另一种实现来支持与`AnyObject`相同的转型操作。
 
@@ -350,7 +353,7 @@ XXX TODO：仅当协议类型与`__SwiftValue `兼容的情况下，运行时逻
 
 ### AnyHashable (SE-0131)
 
-在转型操作中，`AnyHashable`的表现与existential type类似。它满足之前提到的weak existential invariant。
+出于转型的目的，`AnyHashable`的表现与existential type类似。它满足之前提到的weak existential invariant。
 
 然后注意，在其他方面`AnyHashable `的行为与existential type不同。例如，它的元类型名为`AnyHashable.Type`，并且它没有existential元类型。
 
@@ -368,7 +371,7 @@ protocol P {}
 
 转型后的其他适当的类型可以访问protocol witness的内容：
 
-* Strong existential Invariant：对于任意协议`P`，实例`T`，类型`U`，如果`t is P`，那么`t as? U`会返回与`(t as! P) as? U`相同的结果。
+* Strong existential Invariant：对于任意协议`P`，实例`t`，类型`U`，如果`t is P`，那么`t as? U`会返回与`(t as! P) as? U`相同的结果。
 
 除了the protocol witness type`P`之外，每个Swift协议`P`隐式定义了两个其他类型：`P.Protocol`是`protocol metatype`，`P.self`的类型。`P.Type`是“protocol existential metatyp“。后续有相关的详细描述。
 
@@ -376,8 +379,8 @@ protocol P {}
 
 当可选类型转型成协议类型时，如果可能，可选属性可能被保留。存在某个`Optional<T>`类型的实例`o`和某个协议`P`，转型请求`o as? P`将根据`Optional<T>`是否直接遵守协议`P`而返回不同的结果。
 
-* 如果`Optional<T>`遵守协议`P`，那么转型结果将会是包装`o`实例的protocol witness。在这种情况下，紧跟着转型为`Optional<T>`将会恢复原始实例。特别指出，这种情况会保留nil实例。
-* 如果`Optional<T>`不直接遵守协议`P`，那么`o`将会被解包，并尝试使用包含（contained）对象进行转型。如果`o == nil`，也就意味着失败了。一个嵌套的可选`T???`在这种情况下会导致完全解包内部的非可选。
+* 如果`Optional<T>`遵守协议`P`，那么转型结果将会是包装`o`实例的protocol witness。在这种情况下，后续对`Optional<T>`的转换将会恢复原始实例。特别指出，这种情况会保留nil实例。
+* 如果`Optional<T>`不直接遵守协议`P`，那么`o`将会被解包，并尝试使用包含（contained）对象进行转型。如果`o == nil`，也就意味着失败了。一个嵌套的可选`T???`在这种情况下会导致内部的非可选完全解包。
 * 如果以上所有方法均失败，也就意味着转型失败。
 
 例如，`Optional `遵守协议`CustomDebugStringConvertible`,但是不遵守`CustomStringConvertible `。将一个可选实例转型成第一类协议，将会产生一个实例，它的`.debugDescription`属性描述可选实例。将一个可选实例转型成第一类协议，将会产生一个实例，它的`.description `属性描述内部非可选实例。
@@ -404,12 +407,12 @@ S.self.svar // 1
 S.svar // Shorthand for S.self.svar
 ```
 
-针对大多数Swfit类型，`T`的元类型可以用`T.Type`表示。然后，在以下情况中，元类型有不同的命名方法：
+针对大多数Swift类型，`T`的元类型可以用`T.Type`表示。然后，在以下情况中，元类型有不同的命名方法：
 
 * 对于nomial协议类型（nominal protocol type）`P`，元类型用`P.Protocol`命名。 
 * 对于无协议existential类型（non-protocol existential types）`E`，元类型也可以命名为“E.Protocol”。比如`Any.Protocol`，`AnyObject.Protocol`和`Error.Protocol`。
 * 对于一个绑定到泛型变量`G`的类型，即使`G`被绑定到协议或者existential，其元数据也用`G.Type`命名。特别注意，如果`G`被绑定到nomial协议类型`P`，那么`G.Type`是元数据`P.Protocol`的另一个名称。因此`G.Type.self == P.Protocol.self`。
-* 如上所述，尽管`AnyHashabl`e在某些方面的行为类似于existential type，但其元类型称为`AnyHashable.Type`。
+* 如上所述，尽管`AnyHashabl`在某些方面的行为类似于existential type，但其元类型称为`AnyHashable.Type`。
 
 例子：
 
@@ -480,7 +483,7 @@ Invariants
 
 ### Note: "Self conforming" existential types
 
-如上所述，`P`的协议定义隐式定义了类型`P. type`(the existential metatype)和`P. protocol`(元类型)。它还定义了一个容器类型的关联对象`P`，它可以容纳任何遵守协议`P`的具体类型。
+如上所述，`P`的协议定义隐式定义了类型`P. type`(the existential metatype)和`P. protocol`(元类型)。它还定义了一个容器类型的关联类型`P`，它可以容纳任何遵守协议`P`的具体类型。
 
 如果容器类型`P`遵守协议`P`，那么这个协议就是“self conforming”。换句话说`P.self`是`P.Type`的一个实例。（请记住，`P.self`永远是`P.Protocol`的一个实例）
 
@@ -503,7 +506,7 @@ let a : P
 let b : MyGenericType(a)
 ```
 
-如上所述，由于`a`具有类型`P`，此代码使用`T = P`实例化`MyGenericType`,仅当`P`遵守`P`时才有效。请注意，任何指定静态方法、静态属性、关联类型或初始化器的协议都不可能是self-conforming。
+如上所述，由于`a`的类型是`P`，此代码使用`T = P`实例化`MyGenericType`,仅当`P`遵守`P`时才有效。请注意，任何指定静态方法、静态属性、关联类型或初始化器的协议都不可能是self-conforming。
 
 尽管上述是专门针对协议的讨论，但它同样适用于其他existential types。在Swift 5.3中，唯一self-conforming existential types是Any、Error和Objective-C协议，它们没有静态需求（static requirements）。
 
@@ -519,11 +522,11 @@ Invariants
 
 源代码中出现的转型运算符会根据所涉及类型的详细信息以多种方式转换为SIL。一个通用的路径体现在`as!`转换成一些`unconditional_checked_cast `指令的变体和`as`与`is`转换成条件分支指令如`checked_cast_br`。
 
-SIL优化试图简化这些步骤。在某些情况下，转型的结果在编译期就可以完全确定。在某些情况下，编译器可以生成专门的代码来完全转型（例如，指派对`AnyObject`变量的引用）。在其他情况下，编译器可以确定转型是否会成功，但不一定能够计算结果。例如，类应用转型为父类将总是成功的，它可能允许将`checked_cast_br`指令简化为非分支的`unconditional_checked_cast`。同样的，一个静态证实总是会失败的`as?`转型，可以被简化为固定的`nil`值。注意，这些SIL函数也被用作其他目的，包括在调用Objective-C时隐式桥接环转。即使`-Onone`模式中优化被限制的情况下，这也是非常常见的。
+SIL优化试图简化这些步骤。在某些情况下，转型的结果在编译期就可以完全确定。在某些情况下，编译器可以生成专门的代码来完成转型（例如，指派对`AnyObject`变量的引用）。在其他情况下，编译器可以确定转型是否会成功，但不一定能够计算结果。例如，类引用转型为父类将总是成功的，它可能允许将`checked_cast_br`指令简化为非分支的`unconditional_checked_cast`。同样的，一个静态证实总是会失败的`as?`转型，可以被简化为固定的`nil`值。注意，这些SIL函数也被用作其他目的，包括在调用Objective-C时隐式桥接环转。即使`-Onone`模式中优化被限制的情况下，这也是非常常见的。
 
-当SIL被转换为LLVM IR后，其余的转型操作以为对恰当运行时函数调用的形式呈现。最常见的这类函数是`swift_dynamicCast`，接收一个指向输入指针，存储结果的地址和描述所涉及类型的元数据。可能的话，编译器更趋向于发起对该函数的特殊变体的调用，其名称如`swift_dynamicCastClass`和`swift_dynamicCastMetatypeToObject`（完整的列表在[运行时文档](https://github.com/apple/swift/blob/main/docs/Runtime.md)中）。这些定制版本需要更少的参数并执行更少的内部检查，这使它们使用起来开销更少。
+当SIL被转换为LLVM IR后，其余的转型操作将以对恰当运行时函数调用的形式呈现。最常见的这类函数是`swift_dynamicCast`，接收一个指向输入指针，存储结果的地址和描述所涉及类型的元数据。可能的话，编译器更趋向于发起对该函数的特殊变体的调用，其名称如`swift_dynamicCastClass`和`swift_dynamicCastMetatypeToObject`（完整的列表在[运行时文档](https://github.com/apple/swift/blob/main/docs/Runtime.md)中）。这些定制版本需要更少的参数并执行更少的内部检查，这使它们使用起来开销更少。
 
-`swift_dynamicCas`t函数检查输入和输出类型以确定恰当的转换。此过程对输入类型进行递归，以检查existential容器或`可选`的内容。如果输出是existential容易或者`Optional`类型，它也会递归输出类型，以确定合适的基本转换，然后必须为内容配置恰当的容器。它也可能执行额外的元数据查找，以确定是否存在符合`Hashable `，`Error `或`ObjectiveCBridgeable `协议的类型。对于集合，可能最终以递归方式尝试转换每个元素。
+`swift_dynamicCast`函数检查输入和输出类型以确定恰当的转换。此过程对输入类型进行递归，以检查existential容器或`可选`的内容。如果输出是existential容器或者`Optional`类型，它也会递归输出类型，以确定合适的基本转换，然后必须为内容配置恰当的容器。它也可能执行额外的元数据查找，以确定是否存在符合`Hashable `，`Error `或`ObjectiveCBridgeable `协议的类型。对于集合，可能最终以递归方式尝试转换每个元素。
 
 ## Compared to Swift 5.3
 
