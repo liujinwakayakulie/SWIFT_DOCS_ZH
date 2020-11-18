@@ -1,4 +1,4 @@
-原文地址：https://github.com/apple/swift/blob/main/docs/ErrorHandlingRationale.rst#typed-propagation
+原文地址：https://github.com/apple/swift/blob/main/docs/ErrorHandlingRationale.rst
 
 本文调查了错误处理领域，分析了在其他语言中已经提出或正在实践中的各种思想，并最终提出了Swift的错误处理方案并在我们的API中贯彻这些规则。
 
