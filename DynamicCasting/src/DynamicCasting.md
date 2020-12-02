@@ -314,7 +314,7 @@ strong existential invariants与weak existential invariants的情况不同是因
 
 ### Any
 
-任意Swift实例可以转型成`Any`类型。`Any`实例没有有价值的方法或属性。为了使用其内容，必须要将其转型成其他类型。每个类型标识符(type identifier)都是元类型`Any.Type`的实例。
+任意Swift实例可以转型成`Any`类型。`Any`实例没有可用的方法或属性。为了使用其内容，必须要将其转型成其他类型。每个类型标识符(type identifier)都是元类型`Any.Type`的实例。
 
 Invariants
 
