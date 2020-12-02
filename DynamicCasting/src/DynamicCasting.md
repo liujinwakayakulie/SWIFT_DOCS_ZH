@@ -104,7 +104,7 @@ let a = [1, 2, 3] // Array<Int>
 let b = a as? AnyObject // casts to NSArray
 ```
 
-例子2:Foundation通过让NSNumbers遵守`_ObjectiveCBridgeable`也扩展了Swfit的数字类型
+例子2: Foundation 还将每个 Swift 数值类型扩展为遵守 `_ObjectiveCBridgeable ` 的 `NSNumber`。
 
 ```
 let a = 1 // Int
