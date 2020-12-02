@@ -135,7 +135,7 @@ let c = b as? Double
 
 * 如果`U`和`T`是两个任意的类型,`t`是`T`的实例。那么`.some(t) is Optional<U> == t is U`
 * 可选项注入（Optional injection）：如果`T`和`U`是两个任意的类型，`t`是`T`的非空实例，那么`t is Optional<U> == t is U`。
-* 可选项投影（Optional projection）：如果`T`和`U`是两个任意的类型，`t`是`T`的实例，那么`.some(t) is U == t is U`。
+* 可选项推测（Optional projection）：如果`T`和`U`是两个任意的类型，`t`是`T`的实例，那么`.some(t) is U == t is U`。
 * nil转型（Nil Casting）：如果`T`和`U`是两个任意的类型，那么`Optional<T>.none is Optional<U> == true`。
 
 注意：针对上面提到的“可选项注入”，`t`是`T`的非空实例这一前提也就暗示着`T`不是`Optional`或者`T`是`Optional`并且`t`支持`.some(u)`形式。
