@@ -97,7 +97,7 @@ Objective-C类和协议：
 
 注意:关联的`_ObjectiveCType `被约束为`AnyObject`的子类型。它并不局限于现在的Objective-c类型。特别是，该机制同样适用于非Apple平台上的Foundation的Swift实现和Apple平台上的Objective-C Foundation。
 
-例子1:Foundation通过让NSArry遵守`_ObjectiveCBridgeable`扩展了标准库中的`Array`类型。这允许Swift数组与Foundation `NSArray`实例相互转型。
+例子1: Foundation 将标准库中的 `Array` 类型扩展为遵守 `_ObjectiveCBridgeable` 的 `NSArray` 。
 
 ```
 let a = [1, 2, 3] // Array<Int>
