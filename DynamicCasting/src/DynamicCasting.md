@@ -15,7 +15,7 @@ Swfit提供了三个转型操作符：`is` , `as?` 和 `as!`。每个操作符�
 
 注意：静态强制操作符`as`扮演不同的角色，在本文中，它的行为不会单独讨论。
 
-以下是与三个转型操作符相关的常量
+以下不变性（invariants）涉及三个转型操作符：
 
 * 转型检查：`x is T == ((x as? T) != nil)`
 * 有条件的转型：`(x as? T) == (x is T) ? .some(x as! T) : nil`
@@ -685,4 +685,3 @@ print(any as? P)
 ```
 
 * XXX TODO List others
-
