@@ -387,7 +387,7 @@ protocol P {}
 
 ## Metatypes
 
-Swift支持两种类型的元类型：除了许多其他语言支持的常规元类型外，还有existential元类型，用来访问静态协议请求（static protocol requirements）。
+Swift支持两种类型的元类型：除了许多其他语言支持的常规元类型外，它还具有可用于访问静态协议要求的 existential 元类型
 
 ### Metatypes
 
