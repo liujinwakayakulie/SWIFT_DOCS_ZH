@@ -586,7 +586,7 @@ let a = NSNumber()
 print((a as? NSNumber) != nil)
 ```
 
-* `Optional<NSNumber>`不能投影(project)
+* `Optional<NSNumber>`不能推测(project)
 
 ```
 import Foundation
