@@ -52,7 +52,7 @@ a as! Int == a // true
 * 类向下转型：如果`C`是`SuperC`的子类并且`sc`是`SuperC`的实例。仅当`sc`确实是`C`的实例时，`sc is C`返回true。（注意：同样，向下转换不会影响内存中的表现。）
 * Objective-C 类转型：当使用`@objc`属性定义的类或继承自Objective-C类时，上述规则也适用。
 * Class向AnyObject转型：任何类引用都可以转型为`AnyObject`，然后再转型回原始类型。详情见后面“AnyObject”。
-* 如果结构体和枚举类型遵守`_ObjectiveCBridgeable `协议，然后，可以将关联的桥接类型的类强制转换为struct或enum类型，反之亦然。详情见后面“The `_ObjectiveCBridgeable` Protocol”。
+* 如果结构体和枚举类型遵守`_ObjectiveCBridgeable `协议，可以将关联的桥接类型的类强制转换为struct或enum类型，反之亦然。详情见后面“The `_ObjectiveCBridgeable` Protocol”。
 
 Invariants:
 
