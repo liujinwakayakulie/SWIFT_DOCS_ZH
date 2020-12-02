@@ -337,7 +337,7 @@ Invariants
 
 引用类型(类、元类型、或者existential元类型实例)可以不通过任何转换直接指向`AnyObject`。
 
-对于非引用类型，包括结构体、枚举、元组类型，转型逻辑需要先检查`_ObjectiveCBridgeable `协议conformance，它可以将源转换为专门的引用类型。（可以在此前的“The _ObjectiveCBridgeable Protocol”了解更多细节。）
+对于非引用类型，包括结构体、枚举、元组类型，转型逻辑需要先检查`_ObjectiveCBridgeable `一致性，它可以将源转换为专门的引用类型。（可以在此前的“The _ObjectiveCBridgeable Protocol”了解更多细节。）
 
 如果桥接失败，值将会被拷贝到一个与Objective-C内存管理兼容的不透明堆容器。这个容器的唯一作用是允许Swift类型可以与`AnyObject`相互转型，以便它们可以与需要调用Swift代码的Objective-C函数共享。Objective-C代码不能使用这个容器的内容；它只能存储引用并将其传递回Swift函数。
 
