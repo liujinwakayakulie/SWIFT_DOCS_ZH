@@ -1,0 +1,12 @@
+{
+    "title": "High-Level SIL Optimization in the Swift Compiler",
+    "description": "read SIL, write aSIL test case, wirte an optimization pass, add an optimization pass can make things slower",
+    "language": "zh",
+    "license": "cc by nc sa 4.0",
+    "author": "yanfanqi",
+    "x_proofread": "",
+    "x_origin_author": "ben",
+    "x_origin_url": "https://benng.me/2017/08/27/high-level-sil-optimization-in-the-swift-compiler/",
+    "x_origin_ctime": "27 Aug 2017",
+    "structure.glossary": "GLOSSARY.md"
+  }
